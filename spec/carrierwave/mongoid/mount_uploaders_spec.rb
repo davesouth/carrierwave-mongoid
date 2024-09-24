@@ -208,7 +208,7 @@ describe CarrierWave::Mongoid do
 
             before do
               model.save!
-              model.collection.update_one({ _id: model.id }, { images: identifiers })
+              model.collection.update_one({ _id: model.id }, { '$set' => { images: identifiers } })
             end
 
             it 'returns an array of uploaders' do

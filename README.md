@@ -4,9 +4,6 @@
 [![Build Status](https://github.com/carrierwaveuploader/carrierwave-mongoid/workflows/CI/badge.svg?branch=master)](https://github.com/carrierwaveuploader/carrierwave-mongoid/actions?query=workflow%3ACI)
 [![Gem Downloads](https://img.shields.io/gem/dt/carrierwave-mongoid.svg)](https://rubygems.org/gems/carrierwave-mongoid)
 
-This gem adds support for Mongoid and MongoDB's GridFS to
-[CarrierWave](https://github.com/carrierwaveuploader/carrierwave/)
-
 This functionality used to be part of CarrierWave but has since been extracted
 into this gem.
 
@@ -28,12 +25,6 @@ Or, in Rails you can add it to your Gemfile:
 gem 'carrierwave-mongoid', :require => 'carrierwave/mongoid'
 ```
 
-Note: If using Rails 4, you'll need to make sure `mongoid-grid_fs` is `>= 1.9.0`.
-If in doubt, run `bundle update mongoid-grid_fs`
-
-```ruby
-gem 'mongoid-grid_fs', github: 'ahoward/mongoid-grid_fs'
-```
 
 ## Getting Started
 
@@ -47,103 +38,6 @@ automatically be stored when the record is saved. Ex:
 u = User.new
 u.avatar = File.open('somewhere')
 u.save!
-```
-
-## Using MongoDB's GridFS store
-
-In your uploader, set the storage to `:grid_fs`:
-
-```ruby
-class AvatarUploader < CarrierWave::Uploader::Base
-  storage :grid_fs
-end
-```
-
-Bringing it all together, you can also configure Carrierwave to use Mongoid's
-database connection and default all storage to GridFS. That might look something
-like this:
-
-```ruby
-CarrierWave.configure do |config|
-  config.storage = :grid_fs
-  config.root = Rails.root.join('tmp')
-  config.cache_dir = "uploads"
-end
-```
-
-## Serving uploading files
-
-Since GridFS doesn't make the files available via HTTP, you'll need to stream
-them yourself. For example, in Rails, you could use the `send_data` method:
-
-```ruby
-class UsersController < ApplicationController
-  def avatar
-    content = @user.avatar.read
-    if stale?(etag: content, last_modified: @user.updated_at.utc, public: true)
-      send_data content, type: @user.avatar.file.content_type, disposition: "inline"
-      expires_in 0, public: true
-    end
-  end
-end
-
-# and in routes.rb
-resources :users do
-  get :avatar, on: :member
-end
-```
-
-You can optionally tell CarrierWave the URL you will serve your images from,
-allowing it to generate the correct URL, by setting `grid_fs_access_url`:
-
-```ruby
-CarrierWave.configure do |config|
-  config.grid_fs_access_url = "/systems/uploads"
-end
-```
-
-## Route configuration
-
-If you follow the instruction to this point, the uploaded images will be
-stored to GridFS, and you are responsible for serving the images a public
-endpoint. If you would like to use the `#url` method on the uploaded file, you
-will need to take some additional steps.
-
-The `grid_fs_access_url` configuration option is the prefix for the path of
-the stored file in carrierwave.
-
-Let's assume that we have a mounted `avatar` uploader on a `User` model and a
-`GridfsController`. Let's also assume that your uploader definition
-(i.e. `app/uploaders/avatar_uploader.rb`) defines `store_dir` like this:
-
-```ruby
-def store_dir
-  "#{model.class.to_s.underscore}/#{mounted_as}/#{model.id}"
-end
-```
-
-If `grid_fs_access_url` (in `config/initializers/carrierwave.rb`) were:
-
-```ruby
-config.grid_fs_access_url = '/uploads/grid'
-```
-
-You would need to define a route in your `config/routes.rb` like so:
-
-```ruby
-match '/uploads/grid/user/avatar/:id/:filename' => 'gridfs#avatar'
-```
-
-Now, `user.avatar.url` should return an appropriate url path to use in your
-views.
-
-### Different uploaded versions
-
-If you need to include different versions (e.g. thumbnails), additional routes
-will help:
-
-```ruby
-match '/uploads/grid/user/avatar/:id/:filename' => 'gridfs#thumb_avatar', constraints: { filename: /thumb.*/ }
 ```
 
 ## Version differences
