@@ -21,9 +21,10 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency "carrierwave", [">= 2.0", "< 3.0"]
-  s.add_dependency "mongoid", [">= 3.0", "< 9.0"]
+  s.add_dependency "mongoid", [">= 3.0", "< 10.0"]
   s.add_development_dependency "rspec", "~> 3.4"
   s.add_development_dependency "rake", ">= 12.3.3"
   s.add_development_dependency "mini_magick"
   s.add_development_dependency "pry"
+  s.add_development_dependency "debug"
 end
